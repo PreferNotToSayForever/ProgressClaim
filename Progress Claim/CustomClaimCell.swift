@@ -126,6 +126,7 @@ class ClaimedDetailHeader: DatasourceCell {
     
 }
 
+
 class ClaimedDetailFooter: DatasourceCell {
     override func setupViews() {
         super.setupViews()

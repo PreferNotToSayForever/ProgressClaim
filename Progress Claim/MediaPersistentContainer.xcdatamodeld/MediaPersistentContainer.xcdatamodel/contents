@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="11759" systemVersion="16D32" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="PhotoReference" representedClassName="PhotoReference" syncable="YES">
+        <attribute name="afterTreatmentPhotoName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="afterTreatmentPhotoURL" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="beforeTreatmentPhotoName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="beforeTreatmentPhotoURL" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="timeStamp" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="timeStamp"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <elements>
+        <element name="PhotoReference" positionX="-63" positionY="-18" width="128" height="120"/>
+    </elements>
+</model>

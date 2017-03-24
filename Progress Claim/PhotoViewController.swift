@@ -8,6 +8,7 @@
 
 import LBTAComponents
 import Firebase
+import CoreData
 
 class tableViewCell: UITableViewCell,UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     var tableView = PhotoViewController()
@@ -199,7 +200,7 @@ class tableViewCell: UITableViewCell,UIImagePickerControllerDelegate, UINavigati
 }
 
 
-
+//MARK: PhotoViewController Setting Up
 
 class PhotoViewController: UITableViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     var photoString = [String]()
@@ -210,6 +211,9 @@ class PhotoViewController: UITableViewController, UIImagePickerControllerDelegat
     var beforeTreatmentDownloadURL = [String]()
     var afterTreatmentDownloadURL = [String]()
     
+    var container: NSPersistentContainer!
+    var photoReferences = [PhotoReference]()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView?.backgroundColor = UIColor(r: 251, g: 222, b: 75)
@@ -217,14 +221,77 @@ class PhotoViewController: UITableViewController, UIImagePickerControllerDelegat
         navigationController?.title = "Photo"
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addRow))
         navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(goBack))
-        firebaseSwiftJSON()
+//        firebaseSwiftJSON()
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         title = appDelegate.transferingData
         
-       
+// Innitialise CoreData
+        container = NSPersistentContainer(name: "MediaPersistentContainer")
+        container.loadPersistentStores { (storeDescription, error) in
+            self.container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+            if let error = error {
+                print("An error has occured, error description: \(error)")
+            }
+        }
+// Implement a FetchDataRequest by calling a function on background thead
+        performSelector(inBackground: #selector(fetchCommit), with: nil)
+        loadSavedData()
+
     }
+    func fetchCommit(){
+// observe data from firebase
+        deinnitialiseAllValue()
+        defer {
+            self.saveContext()
+            self.loadSavedData()
+        }
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        let key = appDelegate.photoReference
+        guard key != nil else { return }
+        let ref = FIRDatabase.database().reference().child("Photo Reference").child(key!)
+        ref.queryOrdered(byChild: "Time Stamp").observe(.childAdded, with: { (snapshoot: FIRDataSnapshot!) in
+            let photoReference = PhotoReference(context: self.container.viewContext)
+            self.autoIDKey.append(snapshoot.key)
+            photoReference.beforeTreatmentPhotoName = snapshoot.json["Before Treatment Photo Name"].stringValue
+            photoReference.beforeTreatmentPhotoURL = snapshoot.json["Before Treatment Photo"].stringValue
+            photoReference.afterTreatmentPhotoName = snapshoot.json["After Treatment Photo Name"].stringValue
+            photoReference.afterTreatmentPhotoURL = snapshoot.json["After Treatment Photo"].stringValue
+            photoReference.timeStamp = snapshoot.json["Time Stamp"].int16Value
+            
+        })
+        
+        
+            }
+   
+// save data to core data model
+    func saveContext(){
+        if container.viewContext.hasChanges{
+            do {
+                try container.viewContext.save()
+            } catch {
+                print("an error has occurred while saving")
+            }
+        }
+    }
+// load CoreData to tableView
+    
+    func loadSavedData(){
+        let request = PhotoReference.CreatefetchRequest()
+        let sort = NSSortDescriptor(key: "timeStamp", ascending: true)
+        request.sortDescriptors = [sort]
+        
+        do {
+            photoReferences = try container.viewContext.fetch(request)
+            print("got \(photoReferences.count) sections")
+            tableView.reloadData()
+        } catch {
+            print("an error has occurred while loading saved data")
+        }
+    }
+    
+    
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return autoIDKey.count
+        return photoReferences.count
     }
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "MyCustomCell") as! tableViewCell
@@ -234,14 +301,14 @@ class PhotoViewController: UITableViewController, UIImagePickerControllerDelegat
         if autoIDKey.count != 0 {
          cell.fireBasekey.text = autoIDKey[indexPath.item]
         }
-        let beforeTreatmentImageName = self.beforeTreatmentImageName[indexPath.item]
-        let afterTreatmentImageName = self.afterTreatmentImageName[indexPath.item]
-        let downloadURLforeBeforeTreatentImage = self.beforeTreatmentDownloadURL[indexPath.item]
-        let downloadURLforeAfterTreatmentImage = self.afterTreatmentDownloadURL[indexPath.item]
+        let beforeTreatmentImageName = self.photoReferences[indexPath.item].beforeTreatmentPhotoName
+        let afterTreatmentImageName = self.photoReferences[indexPath.item].afterTreatmentPhotoName
+        let downloadURLforeBeforeTreatentImage = self.photoReferences[indexPath.item].beforeTreatmentPhotoURL
+        let downloadURLforeAfterTreatmentImage = self.photoReferences[indexPath.item].afterTreatmentPhotoURL
         cell.beforeFireBaseReference.text = beforeTreatmentImageName
         cell.afterFireBaseReference.text = afterTreatmentImageName
-        cell.afterPhotoFireBaseDownloadURL.text = afterTreatmentDownloadURL [indexPath.item]
-        cell.beforePhotoFireBaseDownloadURL.text = afterTreatmentDownloadURL [indexPath.item]
+        cell.afterPhotoFireBaseDownloadURL.text = downloadURLforeAfterTreatmentImage
+        cell.beforePhotoFireBaseDownloadURL.text = downloadURLforeBeforeTreatentImage
         if beforeTreatmentImageName != "Photo Has Not Been Taken" {
             if isFileNameExist(fileName: beforeTreatmentImageName) {
                 let pathBefore = getDocumentsDirectory().appendingPathComponent(beforeTreatmentImageName)
