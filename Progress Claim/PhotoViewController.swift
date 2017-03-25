@@ -242,21 +242,25 @@ class PhotoViewController: UITableViewController, UIImagePickerControllerDelegat
         cell.afterFireBaseReference.text = afterTreatmentImageName
         cell.afterPhotoFireBaseDownloadURL.text = afterTreatmentDownloadURL [indexPath.item]
         cell.beforePhotoFireBaseDownloadURL.text = afterTreatmentDownloadURL [indexPath.item]
-        if beforeTreatmentImageName != "Photo Has Not Been Taken" {
+        if beforeTreatmentImageName != "Photo Has Not Taken" {
             if isFileNameExist(fileName: beforeTreatmentImageName) {
                 let pathBefore = getDocumentsDirectory().appendingPathComponent(beforeTreatmentImageName)
                 cell.photoBefore.image = UIImage(contentsOfFile: pathBefore.path)
             } else {
               fetchAndDownloadImage(downloadURl: downloadURLforeBeforeTreatentImage, imageName: beforeTreatmentImageName, image: cell.photoBefore)
             }
+        } else {
+            cell.photoBefore.image = nil
         }
-        if afterTreatmentImageName != "Photo Has Not Been Taken"{
+        if afterTreatmentImageName != "Photo Has Not Taken"{
             if isFileNameExist(fileName: afterTreatmentImageName) {
                 let pathAfter = getDocumentsDirectory().appendingPathComponent(afterTreatmentImageName)
                 cell.photoAfter.image = UIImage(contentsOfFile: pathAfter.path)
             } else {
                 fetchAndDownloadImage(downloadURl: downloadURLforeAfterTreatmentImage, imageName: afterTreatmentImageName, image: cell.photoAfter)
             }
+        } else {
+            cell.photoAfter.image = nil
         }
         return cell
     }
