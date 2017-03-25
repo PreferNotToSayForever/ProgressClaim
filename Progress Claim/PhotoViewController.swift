@@ -228,13 +228,14 @@ class PhotoViewController: UITableViewController, UIImagePickerControllerDelegat
 // Innitialise CoreData
         container = NSPersistentContainer(name: "MediaPersistentContainer")
         container.loadPersistentStores { (storeDescription, error) in
-            self.container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+            self.container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
             if let error = error {
                 print("An error has occured, error description: \(error)")
             }
         }
 // Implement a FetchDataRequest by calling a function on background thead
-        performSelector(inBackground: #selector(fetchCommit), with: nil)
+//        performSelector(inBackground: #selector(fetchCommit), with: nil)
+        fetchCommit()
         loadSavedData()
 
     }
@@ -277,7 +278,7 @@ class PhotoViewController: UITableViewController, UIImagePickerControllerDelegat
     
     func loadSavedData(){
         let request = PhotoReference.CreatefetchRequest()
-        let sort = NSSortDescriptor(key: "timeStamp", ascending: true)
+        let sort = NSSortDescriptor(key: "timeStamp", ascending: false)
         request.sortDescriptors = [sort]
         
         do {
